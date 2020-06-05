@@ -31,7 +31,7 @@ public class FpsMeter {
 
         mPaint = new Paint();
         mPaint.setColor(Color.BLUE);
-        mPaint.setTextSize(20);
+        mPaint.setTextSize(50);
     }
 
     public void measure() {
@@ -60,7 +60,7 @@ public class FpsMeter {
 
     public void draw(Canvas canvas, float offsetx, float offsety) {
         Log.d(TAG, mStrfps);
-        canvas.drawText(mStrfps, offsetx, offsety, mPaint);
+        canvas.drawText(mStrfps, offsetx + 15, offsety + 15, mPaint);
     }
 
 }

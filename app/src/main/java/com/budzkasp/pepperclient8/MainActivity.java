@@ -26,7 +26,6 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS:
                 {
-                    Log.i(TAG, "OpenCV loaded successfully");
                     mOpenCvCameraView.enableView();
                 } break;
                 default:
@@ -84,6 +83,6 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        return inputFrame.rgba();
+        return inputFrame.gray();
     }
 }
