@@ -1,6 +1,7 @@
 package com.budzkasp.pepperclient8;
 
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceView;
@@ -11,7 +12,17 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfRect;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 
@@ -20,12 +31,45 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
     private static final String TAG = "MainActivity";
 
     private CameraBridgeViewBase mOpenCvCameraView;
+    private CascadeClassifier mFaceClassifier;
+
+    private Mat mRgba;
+    private Mat mGrey;
+
+
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS:
                 {
+                    InputStream faceInputStream = getResources().openRawResource(R.raw.haarcascade_frontalface_default);
+//                    InputStream eyeInputStream  = getResources().openRawResource(R.raw.haarcascade_eye);
+                    File faceCascadeDir = getDir("cascade", Context.MODE_PRIVATE);
+                    File mCascadeFile = new File(faceCascadeDir, "haarcascade_frontalface_default.xml");
+                    try {
+                        FileOutputStream outputStream = new FileOutputStream(mCascadeFile);
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        while((bytesRead = faceInputStream.read(buffer)) != -1)
+                        {
+                            outputStream.write(buffer, 0, bytesRead);
+                        }
+                        faceInputStream.close();
+                        outputStream.close();
+                        mFaceClassifier = new CascadeClassifier(mCascadeFile.getAbsolutePath());
+                        if(mFaceClassifier.empty())
+                        {
+                            Log.e(TAG, "[OpenCV] Failed to load face classifier from" + mCascadeFile.getAbsolutePath());
+                            mFaceClassifier = null;
+                        }else
+                            Log.i(TAG, "[OpenCV] Loaded face classifier from " + mCascadeFile.getAbsolutePath());
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+
                     mOpenCvCameraView.enableView();
                 } break;
                 default:
@@ -78,11 +122,25 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
 
     @Override
     public void onCameraViewStopped() {
-
+        mRgba.release();
+        mGrey.release();
     }
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        return inputFrame.gray();
+        mRgba = inputFrame.rgba();
+        mGrey = inputFrame.gray();
+
+        MatOfRect detectedFaces = new MatOfRect();
+        mFaceClassifier.detectMultiScale(mRgba, detectedFaces);
+
+        for(Rect rect: detectedFaces.toArray())
+        {
+            Imgproc.rectangle(mRgba, new Point(rect.x, rect.y),
+                    new Point(rect.x + rect.width, rect.y + rect.height),
+                    new Scalar(255, 0, 0));
+        }
+
+        return mRgba;
     }
 }
