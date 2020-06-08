@@ -16,6 +16,7 @@ import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.dnn.Dnn;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
@@ -131,6 +132,7 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
         mRgba = inputFrame.rgba();
         mGrey = inputFrame.gray();
 
+        Imgproc.cvtColor(mRgba, mRgba, Imgproc.COLOR_RGBA2RGB);
         MatOfRect detectedFaces = new MatOfRect();
         mFaceClassifier.detectMultiScale(mRgba, detectedFaces);
 
@@ -138,7 +140,7 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
         {
             Imgproc.rectangle(mRgba, new Point(rect.x, rect.y),
                     new Point(rect.x + rect.width, rect.y + rect.height),
-                    new Scalar(255, 0, 0));
+                    new Scalar(0, 255, 0));
         }
 
         return mRgba;
