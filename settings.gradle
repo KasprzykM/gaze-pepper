@@ -1,2 +1,2 @@
 rootProject.name='pepperClient8'
-include ':app', ':opencv'
+include ':app', ':opencv', ':dlib'

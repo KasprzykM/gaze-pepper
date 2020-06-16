@@ -23,11 +23,13 @@
             android:text="Emotion:"
             android:gravity="start|top"
             android:padding="10dp"/>
+
         <TextView
+            android:id="@+id/emotion_output"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:text="-"
-            android:gravity="center|top"/>
+            android:gravity="center|top"
+            android:text="-" />
     </GridLayout>
 
 </FrameLayout>
