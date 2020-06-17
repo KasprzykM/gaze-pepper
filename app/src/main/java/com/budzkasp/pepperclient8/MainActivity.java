@@ -278,7 +278,9 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
     }
 
     public void update(){
-        emotion.setText(class_name_new);
+        runOnUiThread(() -> {
+            emotion.setText(class_name_new);
+        });
     }
 
     @Override
@@ -286,7 +288,6 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
         mRgba = inputFrame.rgba();
         final Bitmap bitmap = Bitmap.createBitmap(mRgba.cols(), mRgba.rows(), Bitmap.Config.ARGB_8888);
         frameCounter += 1;
-
         mGrey = inputFrame.gray();
 
         Imgproc.cvtColor(mRgba, mRgba, Imgproc.COLOR_RGBA2RGB);
