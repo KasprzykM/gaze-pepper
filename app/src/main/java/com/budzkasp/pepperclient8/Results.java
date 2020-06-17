@@ -16,6 +16,11 @@ public class Results {
 
     public float[] getProbability() { return mProbability; }
 
+    public float getProbabilityForMax()
+    {
+        return mProbability[mNumber];
+    }
+
     private static int argmax(float[] probs) {
         int maxIdx = -1;
         float maxProb = 0.0f;

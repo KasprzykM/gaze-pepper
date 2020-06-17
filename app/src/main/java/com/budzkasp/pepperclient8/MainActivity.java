@@ -286,9 +286,8 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
-        final Bitmap bitmap = Bitmap.createBitmap(mRgba.cols(), mRgba.rows(), Bitmap.Config.ARGB_8888);
-        frameCounter += 1;
         mGrey = inputFrame.gray();
+        frameCounter += 1;
 
         Imgproc.cvtColor(mRgba, mRgba, Imgproc.COLOR_RGBA2RGB);
 
@@ -311,6 +310,7 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
         }
 
         if (frameCounter % 10 == 0) {
+            final Bitmap bitmap = Bitmap.createBitmap(mRgba.cols(), mRgba.rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(mRgba, bitmap);
             System.out.println("DETECT");
             try {
@@ -385,7 +385,7 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
         Results result = mClassifier.classify(inverted);
         String class_predicted = cs.GetClassLabel(result.getNumber());
 
-        class_name_new = GetClassName(class_predicted);
+        class_name_new = GetClassName(class_predicted) + " probability: " + result.getProbabilityForMax();
 
 
         return new BitmapDrawable(getResources(), bm);
