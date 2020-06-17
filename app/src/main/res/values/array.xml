@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="alg">
+        <item>naivebayes.model</item>
+        <item>sgd.model</item>
+        <item>fer2013_mini_XCEPTION.102-0.66.pb</item>
+        <item>logistic.model</item>
+    </string-array>
+</resources>
