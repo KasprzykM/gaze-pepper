@@ -15,6 +15,7 @@ import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Looper;
 import android.util.Log;
 import android.view.SurfaceView;
@@ -90,7 +91,8 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
             add("logistic.model");
         }
     };
-    public String modelName = model.get(1);
+    private static final String tfModel = "fer2013_mini_XCEPTION.102-0.66.pb";
+    public String modelName = tfModel;
     private static final int RESULT_LOAD_IMG = 1;
     private static final int REQUEST_CODE_PERMISSION = 2;
     private static final String WEKA_TEST = "WekaTest";
@@ -109,11 +111,64 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
         super.onCreate(savedInstanceState);
         setContentView(R.layout.camera_activity);
 
+        System.out.println("CHECK: " + isExternalStorageWritable());
+        System.out.println("CHECK: " + isExternalStorageReadable());
+
+        verifyPermissions(this);
+
+        // Init
+        if (mPersonDet == null) {
+            mPersonDet = new PedestrianDet();
+        }
+        if (mFaceDet == null) {
+            mFaceDet = new FaceDet(Constants.getFaceShapeModelPath());
+        }
+
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.tutorial1_activity_java_surface_view);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
 
         emotion = (TextView) findViewById(R.id.emotion_output);
+    }
+
+    /**
+     * Checks if the app has permission to write to device storage or open camera
+     * If the app does not has permission then the user will be prompted to grant permissions
+     *
+     * @param activity
+     */
+    @DebugLog
+    private static void verifyPermissions(Activity activity) {
+        int REQUEST_EXTERNAL_STORAGE = 1;
+        String[] PERMISSIONS_STORAGE = {
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
+        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(activity, PERMISSIONS_STORAGE, REQUEST_EXTERNAL_STORAGE);
+        }
+    }
+
+    /* Checks if external storage is available for read and write */
+    @DebugLog
+    private boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read */
+    @DebugLog
+    private boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
     }
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -222,9 +277,14 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
         mGrey.release();
     }
 
+    public void update(){
+        emotion.setText(class_name_new);
+    }
+
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
+        final Bitmap bitmap = Bitmap.createBitmap(mRgba.cols(), mRgba.rows(), Bitmap.Config.ARGB_8888);
         frameCounter += 1;
 
         mGrey = inputFrame.gray();
@@ -250,45 +310,53 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
         }
 
         if (frameCounter % 10 == 0) {
-            final Bitmap bitmap = Bitmap.createBitmap(mRgba.cols(), mRgba.rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(mRgba, bitmap);
-
+            System.out.println("DETECT");
             try {
-                System.out.println("DETECT");
-                runDetectAsync(bitmap);
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
+                runDetectAsyncTF(bitmap);
+            }catch(Exception e){
+                System.out.println("DETECT EXTEPTION: " + e.getMessage());
             }
+            //runDetectAsync(bitmap);
+            update();
         }
+
         return mRgba;
     }
 
-    protected void runDetectAsync(Bitmap bitmap) throws IOException {
-        // Init
-        if (mPersonDet == null) {
-            mPersonDet = new PedestrianDet();
-        }
-        if (mFaceDet == null) {
-            mFaceDet = new FaceDet(Constants.getFaceShapeModelPath());
-        }
+    protected void runDetectAsyncTF(Bitmap bitmap) throws IOException {
+        class_name_new = null;
+        drawRectTF(bitmap, Color.parseColor("#30DAC5"));
+        System.out.println("DETECTED CLASS " + class_name_new);
+    }
 
+    protected void runDetectAsync(Bitmap bitmap){
         List<VisionDetRet> faceList = mFaceDet.detect(bitmap);
 
         if (faceList.size() > 0) {
-            System.out.println("FACES DETECTED");
+            System.out.println("DETECTED FACES");
+            System.out.println(faceList.get(0).getFaceLandmarks().size());
             class_name_new = null;
             drawRect(bitmap, faceList, Color.parseColor("#30DAC5"));
             emotion.setText(class_name_new);
-            System.out.println("CLASS" + class_name_new);
+            System.out.println("DETECTED CLASS " + class_name_new);
         }
     }
 
-    //Draw rectangle and landmark on image
-    @DebugLog
-    public BitmapDrawable drawRect(Bitmap bm, List<VisionDetRet> results, int color) throws IOException {
+    private void init() {
+        try {
+            mClassifier = new EmotionPredictionTFMobile(getApplicationContext(), tfModel);
+        } catch (RuntimeException e) {
+            Log.e(TAG, "Failed to create classifier.", e);
+        }
+    }
 
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = 1;
+    @DebugLog
+    public BitmapDrawable drawRectTF(Bitmap bm, int color) throws IOException {
+        init();
+        //BitmapFactory.Options options = new BitmapFactory.Options();
+        //options.inSampleSize = 1;
+        //Bitmap bm = BitmapFactory.decodeFile(path, options);
 
         android.graphics.Bitmap.Config bitmapConfig = bm.getConfig();
         // set default bitmap config if none
@@ -298,6 +366,46 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
         // resource bitmaps are imutable,
         // so we need to convert it to mutable one
         bm = bm.copy(bitmapConfig, true);
+
+        // By ratio scale
+        float aspectRatio = bm.getWidth() / (float) bm.getHeight();
+        final int MAX_SIZE = 512;
+        int newWidth = MAX_SIZE;
+        int newHeight = MAX_SIZE;
+        float resizeRatio = 1;
+        newHeight = Math.round(newWidth / aspectRatio);
+        if (bm.getWidth() > MAX_SIZE && bm.getHeight() > MAX_SIZE) {
+            Timber.tag(WEKA_TEST).d("Resize Bitmap");
+            bm = getResizedBitmap(bm, newWidth, newHeight);
+            Timber.tag(WEKA_TEST).d("resizeRatio " + resizeRatio);
+        }
+
+        Bitmap inverted = Bitmap.createScaledBitmap(bm, EmotionPredictionTFMobile.DIM_IMG_SIZE_WIDTH, EmotionPredictionTFMobile.DIM_IMG_SIZE_WIDTH, true);
+        Results result = mClassifier.classify(inverted);
+        String class_predicted = cs.GetClassLabel(result.getNumber());
+
+        class_name_new = GetClassName(class_predicted);
+
+
+        return new BitmapDrawable(getResources(), bm);
+    }
+
+    //Draw rectangle and landmark on image
+    @DebugLog
+    public BitmapDrawable drawRect(Bitmap bitmap, List<VisionDetRet> results, int color){
+        System.out.println("DETECT DRAW RECT");
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 1;
+
+        android.graphics.Bitmap.Config bitmapConfig = bitmap.getConfig();
+        // set default bitmap config if none
+        if (bitmapConfig == null) {
+            bitmapConfig = android.graphics.Bitmap.Config.ARGB_8888;
+        }
+        // resource bitmaps are imutable,
+        // so we need to convert it to mutable one
+        Bitmap bm = bitmap.copy(bitmapConfig, true);
 
         int width = bm.getWidth();
         int height = bm.getHeight();
@@ -326,8 +434,11 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
 //
         ArrayList<org.opencv.core.Point> points_coord = new ArrayList<>();
         String class_predicted = new String();
+
+        System.out.println("DETECT LOOP");
 //        // Loop result list
         for (VisionDetRet ret : results) {
+            System.out.println("DETECT LOOP RES");
 //            android.graphics.Rect bounds = new android.graphics.Rect();
 //            bounds.left = (int) (ret.getLeft() * resizeRatio);
 //            bounds.top = (int) (ret.getTop() * resizeRatio);
@@ -337,6 +448,7 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
 //            // Get landmark
 //            int cont = 0;
             ArrayList<android.graphics.Point> landmarks = ret.getFaceLandmarks();
+            System.out.println("DETECT LANDMARKS " + landmarks.size());
             for (android.graphics.Point point : landmarks) {
 //                cont++;
                 int pointX = (int) (point.x * resizeRatio);
