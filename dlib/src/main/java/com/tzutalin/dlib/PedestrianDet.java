@@ -17,11 +17,12 @@
 package com.tzutalin.dlib;
 
 import android.graphics.Bitmap;
+import android.util.Log;
+
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
-import android.util.Log;
 
 import java.util.Arrays;
 import java.util.List;
