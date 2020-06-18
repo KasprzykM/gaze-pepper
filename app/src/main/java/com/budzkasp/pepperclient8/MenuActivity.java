@@ -11,6 +11,7 @@ import org.opencv.android.CameraBridgeViewBase;
 public class MenuActivity extends Activity {
     Button imageButton;
     Button cameraButton;
+    Button mArButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,6 +19,7 @@ public class MenuActivity extends Activity {
         setContentView(R.layout.activity_menu);
         imageButton = (Button) findViewById(R.id.ImageButton);
         cameraButton = (Button) findViewById(R.id.CameraButton);
+        mArButton = (Button) findViewById(R.id.ARButton);
 
         imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -32,6 +34,11 @@ public class MenuActivity extends Activity {
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                 startActivity(intent);
             }
+        });
+
+        mArButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getApplicationContext(), ARFaceActivity.class);
+            startActivity(intent);
         });
 
     }

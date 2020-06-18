@@ -273,8 +273,10 @@ public class MainActivity extends CameraActivity implements CameraBridgeViewBase
 
     @Override
     public void onCameraViewStopped() {
-        mRgba.release();
-        mGrey.release();
+        if(mGrey != null)
+            mGrey.release();
+        if(mRgba != null)
+            mRgba.release();
     }
 
     public void update(){

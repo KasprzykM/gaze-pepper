@@ -4,4 +4,5 @@
     <string name="image">Image</string>
     <string name="load_image">Load image</string>
     <string name="emotion">Emotion....</string>
+    <string name="ar">AR Avatar</string>
 </resources>

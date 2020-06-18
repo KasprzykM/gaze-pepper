@@ -26,5 +26,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/image" />
+
+        <Button
+            android:id="@+id/ARButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/ar" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

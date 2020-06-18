@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 29
@@ -45,10 +47,17 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation project(path: ':opencv')
 
+    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.19'
+    implementation "com.google.ar.sceneform.ux:sceneform-ux:1.7.0"
     implementation project(':dlib')
     implementation 'com.jakewharton.timber:timber:4.5.1'
     implementation 'com.github.dexafree:materiallist:3.0.1'
     implementation 'org.tensorflow:tensorflow-lite:+'
     implementation 'org.tensorflow:tensorflow-android:+'
     implementation files("libs/weka-stable-3.8.2.jar")
+    implementation "androidx.core:core-ktx:+"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}
+repositories {
+    mavenCentral()
 }

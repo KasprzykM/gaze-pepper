@@ -30,6 +30,12 @@
             android:layout_height="fill_parent"
             android:gravity="center|top"
             android:text="-" />
+
+        <pl.droidsonroids.gif.GifImageView
+            android:layout_width="151dp"
+            android:layout_height="116dp"
+            android:background="@drawable/idle_neutral"
+            android:src="@drawable/idle_neutral" />
     </GridLayout>
 
 </FrameLayout>
